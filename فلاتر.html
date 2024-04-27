@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+<meta charset="UTF-8" />
+<title></title>
+<style type="text/css">
+* {
+    padding: 0;
+    margin: 0;
+    font-family: sans-serif;
+}
+
+body {
+    background: #333;
+    display: grid; /* تحديد العرض */
+}
+
+.container {
+    background: #222;
+    width: 80vw;
+    margin: auto;
+    border-radius: 10px;
+    display: grid;
+    grid-template-columns: 5fr 3fr;
+}
+
+.img {
+    display: flex;
+    flex-direction: column;
+    gap: 50px;
+    justify-content: center;
+    align-items: center;
+}
+
+.img img, canvas {
+    max-width: 45vw; /* تصحيح */
+    max-height: 60vh; /* تصحيح */
+}
+
+.upload input {
+    display: none;
+}
+
+.upload label {
+    color: white;
+    padding: 8px 20px;
+    border: 2px #fff dashed;
+    cursor: pointer;
+}
+
+.filters ul, .filters ul li {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+    direction: rtl;
+}
+
+.filters ul li label {
+    color: white;
+}
+
+.filters ul li:last-child {
+    flex-direction: row;
+    justify-content: space-around;
+}
+
+.filters ul li a, span {
+    color: white;
+    padding: 10px 20px;
+    background: #060;
+}
+
+@media screen and (max-width:800px) {
+    .container {
+        grid-template-columns: 1fr;
+        gap: 50px;
+    }
+
+    .img img, canvas {
+        max-width: 80vw;
+    }
+}
+
+.img-box {
+    position: relative;
+}
+
+.img-box img {
+    max-width: 100%;
+    max-height: 100%;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+}
+
+.img-fullscreen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 9999;
+    background-color: rgba(0, 0, 0, 0.9);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.img-fullscreen img {
+    max-width: 90%;
+    max-height: 90%;
+    cursor: pointer;
+}
+</style>
+</head>
+<body>
+<img src="ككططكك.jpg">
+<div class="container">
+
+    <div class="img">
+        <div class="img-box">
+            <img id="img">
+            <canvas id="canvas"></canvas>
+        </div>
+        <div class="upload">
+            <label for="upload">رفع الصورة</label>
+            <input type="file" id="upload">
+        </div>
+    </div>
+    <div class="filters"> <!-- تصحيح اسم الكلاس -->
+        <ul>
+            <li>
+                <label for="saturate">تشبع</label>
+                <input type="range" id="saturate" min="0" max="200" value="100">
+            </li>
+
+            <li>
+                <label for="contrast">تباين</label>
+                <input type="range" id="contrast" min="0" max="200" value="100">
+            </li>
+
+            <li>
+                <label for="brightness">سطوع</label>
+                <input type="range" id="brightness" min="0" max="200" value="100">
+            </li>
+
+            <li>
+                <label for="sepia">سيبيا</label> <!-- تصحيح -->
+                <input type="range" id="sepia" min="0" max="1" step="0.01" value="0">
+            </li>
+
+            <li>
+                <label for="grayscale">رمادي</label>
+                <input type="range" id="grayscale" min="0" max="1" step="0.01" value="0">
+            </li>
+
+            <li>
+                <label for="blur">ضبابية</label>
+                <input type="range" id="blur" min="0" max="10" step="0.1" value="0">
+            </li>
+
+            <li>
+                <label for="hue-rotate">دوران اللون</label>
+                <input type="range" id="hue-rotate" min="0" max="360" value="0"> <!-- تصحيح -->
+            </li>
+            <li>
+                <a id="download" download="image.jpg">تنزيل</a>
+                <span>إعادة تعيين</span>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<script type="text/javascript">
+    let saturate = document.getElementById("saturate");
+    let contrast = document.getElementById("contrast");
+    let brightness = document.getElementById("brightness");
+    let sepia = document.getElementById("sepia");
+    let grayscale = document.getElementById("grayscale");
+    let blur = document.getElementById("blur");
+    let hueRotate = document.getElementById("hue-rotate");
+    let upload = document.getElementById("upload");
+    let download = document.getElementById("download");
+    let img = document.getElementById("img");
+
+    let reset = document.querySelector('span');
+    let imgBox = document.querySelector('.img-box');
+
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext('2d');
+
+    function resetValue() {
+        img.style.filter = 'none';
+        saturate.value = 100;
+        contrast.value = 100;
+        brightness.value = 100;
+        sepia.value = 0;
+        grayscale.value = 0;
+        blur.value = 0;
+        hueRotate.value = 0;
+    }
+
+    window.onload = function () {
+        download.style.display = 'none';
+        reset.style.display = 'none';
+        imgBox.style.display = 'none';
+    }
+
+    upload.onchange = function() {
+        resetValue();
+        download.style.display = 'block';
+        reset.style.display = 'block';
+        imgBox.style.display = 'block';
+        let file = new FileReader();
+        file.readAsDataURL(upload.files[0]);
+        file.onload = function() {
+            img.src = file.result;
+        }
+        img.onload = function() {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            img.style.display = 'none';
+        }
+    }
+
+    let filters = document.querySelectorAll("ul li input");
+    filters.forEach(filter => {
+        filter.addEventListener('input', function() {
+            ctx.filter = `
+                saturate(${saturate.value}%)
+                contrast(${contrast.value}%)
+                brightness(${brightness.value}%)
+                sepia(${sepia.value})
+                grayscale(${grayscale.value})
+                blur(${blur.value}px)
+                hue-rotate(${hueRotate.value}deg)
+                `;
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                })
+                });
+                
+                reset.addEventListener('click', function() {
+                resetValue();
+                });
+                
+                img.addEventListener('click', function() {
+                imgBox.classList.toggle('img-fullscreen');
+                });
+                
+                imgBox.addEventListener('click', function(event) {
+                if (!event.target.closest('img')) {
+                imgBox.classList.remove('img-fullscreen');
+                }
+                });
+                
+                download.onclick = function() {
+                download.href = canvas.toDataURL();
+                }
+                </script>
+                
+                </body>
+                </html>
